@@ -1,0 +1,6 @@
+###### Branch labeling
+feature: ['ft-*', 'feat-*']
+fix: ['fix-*']
+chore: ['chore-*', 'ch-*']
+bug: ['bug-*', 'bg-*']
+enhancement: ['en-*']

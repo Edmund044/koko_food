@@ -1,0 +1,83 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [develop]
+env:
+  HOST: ${{secrets.SSH_HOST}}
+  SSH_USER: ${{secrets.SSH_USER}}
+  SSH_PORT: ${{secrets.SSH_PORT}}
+  SSH_KEY: ${{secrets.SSH_KEY}}
+
+jobs:
+   test:
+     runs-on: ubuntu-latest
+     services:
+       redis:
+         image: redis
+         ports:
+           - 6379:6379
+       server:
+         image: node:latest
+         ports:
+           - 5252:5252
+           - 4000:4000
+           - 6000:6000
+     steps:
+       - uses: actions/checkout@v2
+       - uses: actions/setup-node@v2
+         with:
+           node-version: "16.x.x"
+       - name: Test Apigateway
+         env:
+           NODE_ENV: test
+           REQUEST_BODY_LIMIT: 100mb
+           SERVICE_NAME: apigateway
+           LOG_ENABLED: true
+           DB_URL: mongodb://localhost/paylend
+           REDIS_URL: redis://localhost:6379
+           SENTRY_DSN: https://foo:bar@app.getsentry.com/269
+           TOKEN_ISSUER: api.paylend.africa
+           API_HOST_URL: localhost
+           ENCRYPT_DECRYPT_PASSWORD: xxx-xxx-xxx
+           ENCRYPT_DECRYPT_ALGORITHM: aes-256-ctr
+           MAIL_SENDER_NAME: "Dummy Name"
+           MAIL_SENDER_ADDRESS: test@example.com
+           MAIL_PORT: 2525
+           MAIL_HOST: smtp.mailtrap.io
+           MAIL_USER: some-user
+           MAIL_PASSWORD: some-password
+           PAYMENT_SERVICE_URL: some-payment-url
+           APP_DOMAIN: some-app-domain
+           JWT_SECRET_KEY: xxx-xxx-xxx
+           CLIENT_SECRET: xxx-xxx-xxx
+           PORT: 4000
+         run: |
+          echo "Run beta tests "
+          npm ci
+          npm test
+
+   deploy:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16.x.x"
+      - name: Deploy to staging server
+        env:
+          SSH_KEY: ${{secrets.SSH_KEY}}
+        run: |
+          echo "start deployment to server "
+          mkdir ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          chmod 0755 ./.github/workflows/deploy.sh
+
+          ./.github/workflows/deploy.sh && exit
+          rm -rf ~/.ssh
+        shell: bash
