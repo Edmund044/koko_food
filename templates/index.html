@@ -1,18 +1,73 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Paylend Loan Predictor</title>
-</head>
-<body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KOKO FOOD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container-fluid" >
+     
+      <div class="row">
+        
+        <div class="col-lg-6 position-relative">
+            <nav class="navbar ">
+                <div class="container-fluid">
+                  <span class="navbar-brand mb-0 display-1"><h1  style="
+                    font-style: normal;
+                    font-weight: 900;
+                    font-size: 36px;
+                    line-height: 54px;
+                    /* identical to box height */
+                    
+                    
+                    color: #00E1FD;"><b>KOKO FOOD</b></h1></span>
+                </div>
+              </nav>
+              <br>
+              <br>
+          <form  enctype="multipart/form-data" action="/create-employee"  method="POST" class="row g-3 position-absolute top-50 start-20" >
+            <h1 class="display-1 text-center"><b>REGISTER</b></h1>
+            <div class="col-md-12">
+              <label for="inputPassword4" class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control border border-top-0 border border-end-0 border border-start-0 border-dark" id="inputPassword4">
+            </div>
+            <div class="col-md-12">
+              <label for="inputPassword4" class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control border border-top-0 border border-end-0 border border-start-0 border-dark" id="inputPassword4">
+            </div>
+            <div class="col-md-12">
+                <label for="inputPassword4" class="form-label">Designation</label>
+                <input type="text" name="designation" class="form-control border border-top-0 border border-end-0 border border-start-0 border-dark" id="inputPassword4">
+              </div>
+              <div class="col-md-12">
+               <label for="inputEmail4" class="form-label">Employee Number</label>
+               <input type="text" name="employee_number" class="form-control border border-top-0 border border-end-0 border border-start-0 border-dark" id="inputEmail4">
+             </div>
+             <div class="col-md-12">
+               <label for="inputEmail4" class="form-label">Department</label>
+               <input type="text" name="department" class="form-control border border-top-0 border border-end-0 border border-start-0 border-dark" id="inputEmail4">
+             </div>
+            
+            <div class="col-12">
+              <div class="d-grid gap-2 col-6 mx-auto">
+                <input type="submit" name="submit"  class="btn btn-lg rounded-5 text-light" style="background: #00E1FD;
+                box-shadow: 0px 4px 26px rgba(0, 0, 0, 0.25);" value="REGISTER">
+              </div>
+            </div>
+            
+          </form>
+        </div>
+        <div class="col-lg-6" >
+            <div style="position: absolute;width: 900px;height: 100%;background-color: #00E1FD;">
+                <h1 class="text-center" style="margin-bottom:-10px"><b>KOKO FOOD</b></h1>
+            
+            </div>
+        </div>
+        
 
-<h1>Input your income to predict your loan</h1>
-
-   <form action="/prediction" method="POST">
-      <input type="text" name="income" placeholder="income">
-      <input type="submit">
-   </form>
-
-</body>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+  </body>
 </html>
-
-
