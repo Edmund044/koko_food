@@ -21,6 +21,7 @@ class EmployeeModel(db.Model):
     employee_number = db.Column(db.String(),unique = True)
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
+    email = db.Column(db.String(),unique = True)
     designation = db.Column(db.String())
     department = db.Column(db.String())
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
@@ -153,11 +154,12 @@ def createEmployee():
             employee_number = body["employee_number"]
             first_name = body["first_name"]
             last_name = body["last_name"]
+            email = body["email"]
             designation = body["designation"]
             department = body["department"]
 
         try:
-         new_employee = EmployeeModel(first_name=first_name, last_name=last_name, designation=designation, department=department, employee_number=employee_number)
+         new_employee = EmployeeModel(first_name=first_name, last_name=last_name, email=email,designation=designation, department=department, employee_number=employee_number)
          db.session.add(new_employee)
          db.session.commit()
          return make_response(json.dumps({"message":"Success"}), 200)
@@ -174,7 +176,7 @@ def loginEmployee():
             email = body["email"]
 
         try:
-          admin = AdminModel.query.filter_by(email=email).first()
+          admin = EmployeeModel.query.filter_by(email=email).first()
           if admin:
                 return make_response(json.dumps({"message":"Success"}), 200)
           else:
@@ -184,6 +186,7 @@ def loginEmployee():
         except Exception as e:
          db.session.rollback()
          db.session.flush()
+         print(e)
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 
@@ -340,7 +343,13 @@ def submit():
         #     limit = 0     
         return render_template("prediction.html", n = limit)
        
+def runServer(host='0.0.0.0'):
 
+    app.run(host)
 
 if __name__ == "__main__":
-    app.run(debug=True)    
+    try:
+        runServer()
+    finally:
+        app.run()
+
