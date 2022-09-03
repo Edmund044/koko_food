@@ -6,10 +6,11 @@ from sqlalchemy import DateTime, extract
 from sqlalchemy.sql import func
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from flask_cors import CORS, cross_origin
 # Import Module
 import json
 app = Flask(__name__)
+CORS(app)
 from random import randint
 
  
@@ -64,14 +65,17 @@ def create_table():
     db.create_all()
 
 @app.route("/")
+@cross_origin()
 def index():
     return render_template("index.html")
 
 @app.route("/dashboard")
+@cross_origin()
 def dashboard():
     return render_template("dashboard.html")
 
 @app.route("/admin-signup", methods=['POST'])
+@cross_origin()
 def signupAdmin():
         if request.method == "POST":
             body = request.get_json()
@@ -93,6 +97,7 @@ def signupAdmin():
             return make_response(json.dumps({"message":"User created successfully"}), 200)
 
 @app.route("/admin-login", methods=['POST'])
+@cross_origin()
 def loginAdmin():
         if request.method == "POST":
             body = request.get_json()
@@ -116,6 +121,7 @@ def loginAdmin():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/update-admin", methods=['PUT'])
+@cross_origin()
 def updateAdmin():
         if request.method == "PUT":
             body = request.get_json()
@@ -145,6 +151,7 @@ def updateAdmin():
 
 
 @app.route("/create-employee", methods=['GET', 'POST'])
+@cross_origin()
 def createEmployee():
         if request.method == "GET":
             return render_template("index.html")
@@ -170,6 +177,7 @@ def createEmployee():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/employee-login", methods=['POST'])
+@cross_origin()
 def loginEmployee():
         if request.method == "POST":
             body = request.get_json()
@@ -192,6 +200,7 @@ def loginEmployee():
 
 
 @app.route("/update-employee", methods=['PUT'])
+@cross_origin()
 def updateEmployee():
         if request.method == "PUT":
             body = request.get_json()
@@ -216,6 +225,7 @@ def updateEmployee():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/create-transaction", methods=['POST'])
+@cross_origin()
 def createTransaction():
         if request.method == "POST":
             body = request.get_json()
@@ -243,6 +253,7 @@ def createTransaction():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500)       
 
 @app.route("/create-meal", methods=['POST'])
+@cross_origin()
 def createMeal():
         if request.method == "POST":
             body = request.get_json()
@@ -262,6 +273,7 @@ def createMeal():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/get-meal-by-id", methods=['GET'])
+@cross_origin()
 def getMealById():
         if request.method == "GET":
             body = request.get_json()
@@ -278,6 +290,7 @@ def getMealById():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/update-meal", methods=['PUT'])
+@cross_origin()
 def updateMeal():
         if request.method == "PUT":
             body = request.get_json()
@@ -298,6 +311,7 @@ def updateMeal():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/update-transaction", methods=['PUT'])
+@cross_origin()
 def updateTransaction():
         if request.method == "PUT":
             body = request.get_json()
@@ -322,6 +336,7 @@ def updateTransaction():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 @app.route("/retrieve-employees", methods=['GET'])
+@cross_origin()
 def getEmployee():
         employees = {}
         for employee in db.session.query(EmployeeModel).all():  
@@ -331,6 +346,7 @@ def getEmployee():
         return jsonify(employees)  
 
 @app.route("/prediction", methods=['GET', 'POST'])
+@cross_origin()
 def submit():
     if request.method == "POST":
         income = int(request.form["income"])
