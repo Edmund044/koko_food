@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime, extract
 from sqlalchemy.sql import func
-from datetime import datetime
+from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS, cross_origin
 # Import Module
@@ -232,27 +232,24 @@ def createTransaction():
             employee_id = body["employee_id"]
 
         try:
-          admin = TransactionsModel.query.filter(TransactionsModel.employee_id == employee_id,
-           extract('month', TransactionsModel.time_created) == datetime.today().month,
-           extract('year', TransactionsModel.time_created) == datetime.today().year,
-           extract('day', TransactionsModel.time_created) == datetime.today().day)
-          if admin:
-             return make_response(json.dumps({"message":"Already taken Food"}), 401)
+          transaction = TransactionsModel.query.filter(TransactionsModel.employee_id == employee_id,
+            func.date(TransactionsModel.time_created) == date.today()
+           ).first()
+          if not transaction:
+             meal_of_the_day = MealModel.query.filter(func.date(MealModel.time_created) == date.today())
+             new_transaction = TransactionsModel(employee_id=employee_id, meal_id=2)
+             db.session.add(new_transaction)
+             db.session.commit()
+             return make_response(json.dumps({"message":"Success"}), 200)
+             
             
           else:
-            meal_of_the_day = MealModel.query.filter(TransactionsModel.employee_id == employee_id,
-             extract('month', MealModel.time_created) == datetime.today().month,
-             extract('year', MealModel.time_created) == datetime.today().year,
-             extract('day', MealModel.time_created) == datetime.today().day)
-
-            new_transaction = TransactionsModel(employee_id=employee_id, meal_id=meal_of_the_day.id)
-            db.session.add(new_transaction)
-            db.session.commit()
-            return make_response(json.dumps({"message":"Success"}), 200)
+             return make_response(json.dumps({"message":"Already taken Food"}), 401)
 
         except Exception as e:
          db.session.rollback()
          db.session.flush()
+         print(e) 
          return make_response(json.dumps({"message":"Unsuccessful"}), 500)       
 
 @app.route("/create-meal", methods=['POST'])
