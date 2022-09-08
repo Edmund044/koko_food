@@ -184,9 +184,9 @@ def loginEmployee():
             email = body["email"]
 
         try:
-          admin = EmployeeModel.query.filter_by(email=email).first()
-          if admin:
-                return make_response(json.dumps({"message":"Success"}), 200)
+          employee = EmployeeModel.query.filter_by(email=email).first()
+          if employee:
+                return make_response(json.dumps({"message":"Success","employee_id":employee.id}), 200)
           else:
                 return make_response(json.dumps({"message":"Employee does not exist"}), 403)
           
@@ -241,7 +241,12 @@ def createTransaction():
              return make_response(json.dumps({"message":"Already taken Food"}), 401)
             
           else:
-            new_transaction = TransactionsModel(employee_id=employee_id, meal_id=meal_id)
+            meal_of_the_day = MealModel.query.filter(TransactionsModel.employee_id == employee_id,
+             extract('month', MealModel.time_created) == datetime.today().month,
+             extract('year', MealModel.time_created) == datetime.today().year,
+             extract('day', MealModel.time_created) == datetime.today().day)
+
+            new_transaction = TransactionsModel(employee_id=employee_id, meal_id=meal_of_the_day.id)
             db.session.add(new_transaction)
             db.session.commit()
             return make_response(json.dumps({"message":"Success"}), 200)
