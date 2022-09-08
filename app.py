@@ -252,7 +252,6 @@ def createTransaction():
 
         except Exception as e:
          db.session.rollback()
-         print(e)
          db.session.flush()
          return make_response(json.dumps({"message":"Unsuccessful"}), 500)       
 
