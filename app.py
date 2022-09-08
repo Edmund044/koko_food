@@ -230,7 +230,6 @@ def createTransaction():
         if request.method == "POST":
             body = request.get_json()
             employee_id = body["employee_id"]
-            meal_id = body["meal_id"]
 
         try:
           admin = TransactionsModel.query.filter(TransactionsModel.employee_id == employee_id,
