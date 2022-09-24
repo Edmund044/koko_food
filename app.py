@@ -1,8 +1,9 @@
 from email import message
 import datetime
+from dataclasses import dataclass
 from flask import Flask, render_template, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import DateTime, extract
+from sqlalchemy import DateTime, extract, inspect
 from sqlalchemy.sql import func
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +17,7 @@ from random import randint
  
 db =SQLAlchemy()
  
+@dataclass
 class EmployeeModel(db.Model):
     __tablename__ = "employees"
     id = db.Column(db.Integer, primary_key=True)
@@ -28,6 +30,16 @@ class EmployeeModel(db.Model):
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
 
+    def rowsToDictionary():
+         employees_dictionary = []
+         for employee in EmployeeModel.query.all():
+          new_employee_object = employee.__dict__
+          del new_employee_object['_sa_instance_state']
+          employees_dictionary.append(new_employee_object)
+
+         return employees_dictionary
+
+@dataclass
 class AdminModel(db.Model):
     __tablename__ = "admins"
     id = db.Column(db.Integer, primary_key=True)
@@ -39,6 +51,16 @@ class AdminModel(db.Model):
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
 
+    def rowsToDictionary():
+         admins_dictionary = []
+         for admin in AdminModel.query.all():
+          new_admin_object = admin.__dict__
+          del new_admin_object['_sa_instance_state']
+          admins_dictionary.append(new_admin_object)
+
+         return admins_dictionary
+
+@dataclass
 class TransactionsModel(db.Model):
     __tablename__ = "meal_transactions"
     id = db.Column(db.Integer, primary_key=True)
@@ -48,6 +70,16 @@ class TransactionsModel(db.Model):
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
 
+    def rowsToDictionary():
+         meal_transactions_dictionary = []
+         for meal_transaction in TransactionsModel.query.all():
+          meal_transaction_object = meal_transaction.__dict__
+          del meal_transaction_object['_sa_instance_state']
+          meal_transactions_dictionary.append(meal_transaction_object)
+
+         return meal_transactions_dictionary
+
+@dataclass
 class MealModel(db.Model):
     __tablename__ = "meals"
     id = db.Column(db.Integer, primary_key=True)
@@ -55,6 +87,15 @@ class MealModel(db.Model):
     meal_description = db.Column(db.String())
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
+
+    def rowsToDictionary():
+         meals_dictionary = []
+         for meal in MealModel.query.all():
+          new_meal_object = meal.__dict__
+          del new_meal_object['_sa_instance_state']
+          meals_dictionary.append(new_meal_object)
+
+         return meals_dictionary
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///koko_food.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -150,6 +191,7 @@ def updateAdmin():
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
 
+
 @app.route("/create-employee", methods=['GET', 'POST'])
 @cross_origin()
 def createEmployee():
@@ -224,6 +266,15 @@ def updateEmployee():
          db.session.flush()
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
+@app.route("/retrieve-employees", methods=['GET'])
+def retrieveEmployee():
+    try: 
+      return make_response(jsonify(data=EmployeeModel.rowsToDictionary()), 200)
+    except Exception as e:  
+      db.session.rollback()
+      db.session.flush()
+      return make_response(json.dumps({"message":"Unsuccessful"}), 500)   
+
 @app.route("/create-transaction", methods=['POST'])
 @cross_origin()
 def createTransaction():
@@ -252,6 +303,16 @@ def createTransaction():
          print(e) 
          return make_response(json.dumps({"message":"Unsuccessful"}), 500)       
 
+@app.route("/retrieve-transactions", methods=['GET'])
+def retrieveTransactions():
+    try: 
+      return make_response(jsonify(data=TransactionsModel.rowsToDictionary()), 200)
+    except Exception as e:  
+      print(e)
+      db.session.rollback()
+      db.session.flush()
+      return make_response(json.dumps({"message":"Unsuccessful"}), 500)   
+
 @app.route("/create-meal", methods=['POST'])
 @cross_origin()
 def createMeal():
@@ -271,6 +332,16 @@ def createMeal():
          print(e)
          db.session.flush()
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
+
+@app.route("/retrieve-meals", methods=['GET'])
+def retrieveMeals():
+    try: 
+      return make_response(jsonify(data=MealModel.rowsToDictionary()), 200)
+    except Exception as e:  
+      db.session.rollback()
+      db.session.flush()
+      return make_response(json.dumps({"message":"Unsuccessful"}), 500)   
+         
 
 @app.route("/get-meal-by-id", methods=['GET'])
 @cross_origin()
@@ -335,15 +406,8 @@ def updateTransaction():
          db.session.flush()
          return make_response(json.dumps({"message":"Unsuccessful"}), 500) 
 
-@app.route("/retrieve-employees", methods=['GET'])
-@cross_origin()
-def getEmployee():
-        employees = {}
-        for employee in db.session.query(EmployeeModel).all():  
-         del employee.__dict__['_sa_instance_state']
-         employees.append(employee.__dict__)
- 
-        return jsonify(employees)  
+
+         
 
 @app.route("/prediction", methods=['GET', 'POST'])
 @cross_origin()
