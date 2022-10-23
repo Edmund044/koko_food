@@ -15,7 +15,7 @@ CORS(app)
 from random import randint
 
  
-db =SQLAlchemy()
+db =SQLAlchemy(app)
  
 @dataclass
 class EmployeeModel(db.Model):
@@ -59,26 +59,6 @@ class AdminModel(db.Model):
           admins_dictionary.append(new_admin_object)
 
          return admins_dictionary
-
-@dataclass
-class TransactionsModel(db.Model):
-    __tablename__ = "meal_transactions"
-    id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer())
-    meal_id = db.Column(db.Integer())
-    status = db.Column(db.Boolean(), default=False)
-    time_created = db.Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
-
-    def rowsToDictionary():
-         meal_transactions_dictionary = []
-         for meal_transaction in TransactionsModel.query.all():
-          meal_transaction_object = meal_transaction.__dict__
-          del meal_transaction_object['_sa_instance_state']
-          meal_transactions_dictionary.append(meal_transaction_object)
-
-         return meal_transactions_dictionary
-
 @dataclass
 class MealModel(db.Model):
     __tablename__ = "meals"
@@ -96,6 +76,27 @@ class MealModel(db.Model):
           meals_dictionary.append(new_meal_object)
 
          return meals_dictionary
+@dataclass
+class TransactionsModel(db.Model):
+    __tablename__ = "meal_transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer())
+    meal_id = db.Column(db.Integer(), db.ForeignKey(MealModel.id))
+    status = db.Column(db.Boolean(), default=False)
+    time_created = db.Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
+
+    def rowsToDictionary():
+         meal_transactions_dictionary = []
+         for meal_transaction in db.session.query(TransactionsModel,MealModel.meal_name).outerjoin(MealModel, TransactionsModel.meal_id==MealModel.id).all():
+           print(meal_transaction[0].__dict__)
+           meal_transaction_object = meal_transaction[0].__dict__
+           del meal_transaction_object['_sa_instance_state']
+           meal_transactions_dictionary.append(meal_transaction_object)
+
+         return meal_transactions_dictionary
+
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///koko_food.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -181,7 +182,7 @@ def updateAdmin():
          admin.last_name = last_name
          admin.email = email
          admin.role = role 
-         admin.password = password
+         admin.password = generate_password_hash(password, method='sha256')
          db.session.commit()   
          return make_response(json.dumps({"message":"Success"}), 200)
 
@@ -288,7 +289,7 @@ def createTransaction():
            ).first()
           if not transaction:
              meal_of_the_day = MealModel.query.filter(func.date(MealModel.time_created) == date.today())
-             new_transaction = TransactionsModel(employee_id=employee_id, meal_id=2)
+             new_transaction = TransactionsModel(employee_id=employee_id, meal_id=meal_of_the_day.id)
              db.session.add(new_transaction)
              db.session.commit()
              return make_response(json.dumps({"message":"Success"}), 200)
