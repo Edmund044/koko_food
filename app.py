@@ -62,7 +62,7 @@ class AdminModel(db.Model):
 @dataclass
 class MealModel(db.Model):
     __tablename__ = "meals"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     meal_name = db.Column(db.Integer())
     meal_description = db.Column(db.String())
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
@@ -80,22 +80,40 @@ class MealModel(db.Model):
 class TransactionsModel(db.Model):
     __tablename__ = "meal_transactions"
     id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer())
-    meal_id = db.Column(db.Integer(), db.ForeignKey(MealModel.id))
+    employee_id = db.Column(db.Integer(), db.ForeignKey("employees.id"))
+    meal_id = db.Column(db.Integer(), db.ForeignKey("meals.id"))
     status = db.Column(db.Boolean(), default=False)
     time_created = db.Column(DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(DateTime(timezone=True), onupdate=func.now())
 
     def rowsToDictionary():
-         meal_transactions_dictionary = []
-         for meal_transaction in db.session.query(TransactionsModel,MealModel.meal_name).outerjoin(MealModel, TransactionsModel.meal_id==MealModel.id).all():
-           print(meal_transaction[0].__dict__)
-           meal_transaction_object = meal_transaction[0].__dict__
-           del meal_transaction_object['_sa_instance_state']
-           meal_transactions_dictionary.append(meal_transaction_object)
+        meal_transactions_query_results = db.session.query(TransactionsModel.id,TransactionsModel.time_updated,TransactionsModel.time_created,TransactionsModel.status,MealModel.meal_name.label("meal_name"),EmployeeModel.first_name.label("first_name"),EmployeeModel.last_name.label("last_name")).\
+            outerjoin(MealModel, TransactionsModel.meal_id==MealModel.id).\
+            outerjoin(EmployeeModel, TransactionsModel.employee_id==EmployeeModel.id).all()
+        meal_transactions = [{
+            'id':meal_transaction.id,
+            'employee_name':meal_transaction.first_name + ' ' + meal_transaction.last_name,
+            'meal_name':meal_transaction.meal_name,
+            'status':meal_transaction.status, 
+            'time_created':meal_transaction.time_created,
+            'time_updated': meal_transaction.time_updated,
 
-         return meal_transactions_dictionary
+        } for meal_transaction in meal_transactions_query_results]
+        return meal_transactions
 
+    def createInvoices():    
+         invoice_created_query_results = db.session.query(TransactionsModel.meal_id,TransactionsModel.time_created,func.count(TransactionsModel.meal_id).label('served_plates'),TransactionsModel.time_created).filter(TransactionsModel.status == False).group_by(func.strftime('%m', TransactionsModel.time_created))
+         invoices_created = [{
+            # 'id':invoice_created.id,
+            'invoice_number': "KF{}".format(invoice_created.time_created.strftime('%Y%m%d')),
+            'served_plates':invoice_created.served_plates,
+            'amount_in_ksh':invoice_created.served_plates * 300,
+            'date':invoice_created.time_created.strftime('%Y%m%d'),
+            'status':False
+
+        } for invoice_created in invoice_created_query_results]
+         return invoices_created
+        
 
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///koko_food.db'
@@ -308,6 +326,15 @@ def createTransaction():
 def retrieveTransactions():
     try: 
       return make_response(jsonify(data=TransactionsModel.rowsToDictionary()), 200)
+    except Exception as e:  
+      print(e)
+      db.session.rollback()
+      db.session.flush()
+      return make_response(json.dumps({"message":"Unsuccessful"}), 500)   
+@app.route("/retrieve-invoices", methods=['GET'])
+def retrieveInvoices():
+    try: 
+      return make_response(jsonify(data=TransactionsModel.createInvoices()), 200)
     except Exception as e:  
       print(e)
       db.session.rollback()
