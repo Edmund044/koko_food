@@ -104,7 +104,6 @@ class TransactionsModel(db.Model):
     def createInvoices():    
          invoice_created_query_results = db.session.query(TransactionsModel.meal_id,TransactionsModel.time_created,func.count(TransactionsModel.meal_id).label('served_plates'),TransactionsModel.time_created).filter(TransactionsModel.status == False).group_by(func.strftime('%m', TransactionsModel.time_created))
          invoices_created = [{
-            # 'id':invoice_created.id,
             'invoice_number': "KF{}".format(invoice_created.time_created.strftime('%Y%m%d')),
             'served_plates':invoice_created.served_plates,
             'amount_in_ksh':invoice_created.served_plates * 300,
